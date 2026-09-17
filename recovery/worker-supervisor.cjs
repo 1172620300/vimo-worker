@@ -34,7 +34,7 @@ class Supervisor{
  }
  async tick(){
   try{await this.comfy()}catch(e){this.log('comfy',e.message);this.localComfy={ready:false};this.components.comfy.lastError=e.message}
-  const agentProc=this.components.agent;if(!agentProc.pid||!alive(agentProc.pid)){if(Date.now()>=agentProc.nextRetry)this.start('agent',process.execPath,[path.join(this.dir,'worker-agent.cjs')],this.dir)}
+  const agentProc=this.components.agent;if(!agentProc.pid||!alive(agentProc.pid)){if(Date.now()>=agentProc.nextRetry)this.start('agent',process.execPath,[path.join(__dirname,'worker-agent.cjs')],this.dir)}
   const agent=read(path.join(this.dir,'agent-status.json'));
   const agentFresh=agent&&Date.now()-Date.parse(agent.updatedAt)<35000&&alive(agent.pid);
   agentProc.state=agentFresh?'Running':'Starting / Unresponsive';
@@ -53,11 +53,11 @@ class Supervisor{
   this.log('worker','Supervisor started PID='+process.pid);this.rows=inventory();this.lastInventory=Date.now();
   const oldStatus=read(path.join(this.dir,'status.json'));
   for(const manager of [this.core,this.admin]){const key=manager.kind==='core'?this.config.workerKey:this.config.adminKey;const row=this.rows.find(p=>p.CommandLine?.includes(key)&&p.CommandLine?.includes(manager.kind==='core'?'-R':'-L'));const previous=oldStatus?.components[manager.kind];if(row&&previous?.target){manager.adopt(row,previous.target,previous);if(manager.kind==='admin')this.adminPort=previous.target.port}else if(row)throw Error('Untracked managed SSH process; refusing duplicate')}
-  const priorAgent=this.rows.find(p=>p.CommandLine?.includes(path.join(this.dir,'worker-agent.cjs')));if(priorAgent)this.components.agent.pid=priorAgent.ProcessId;
+  const priorAgent=this.rows.find(p=>p.CommandLine?.includes(path.join(__dirname,'worker-agent.cjs')));if(priorAgent)this.components.agent.pid=priorAgent.ProcessId;
   for(const port of [...new Set([...(this.config.comfyCandidates||[]).map(e=>e.port),8090,...this.config.adminPorts])])this.log('worker',`port ${port}: ${await available(port)?'available':'occupied/unavailable'}`);
   while(true){try{await this.tick()}catch(e){this.log('worker','monitor error: '+e.stack)}await new Promise(r=>setTimeout(r,2000))}
  }
 }
 module.exports={Supervisor,detectedEndpoints,urlFor};
-if(require.main===module)new Supervisor(read(path.join(__dirname,'config.json')),__dirname).run().catch(e=>{console.error(e);process.exitCode=1});
+if(require.main===module){const dir=require('../runtime-paths.cjs').dataDir();new Supervisor(read(path.join(dir,'config.json')),dir).run().catch(e=>{console.error(e);process.exitCode=1})}
 

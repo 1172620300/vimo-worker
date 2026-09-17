@@ -1,0 +1,35 @@
+name: Release Vimo Worker
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+concurrency:
+  group: worker-release-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run build:release
+        if: github.ref_type != 'tag'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vimo-worker-windows
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+            dist/latest.yml
+            dist/SHA256SUMS.txt

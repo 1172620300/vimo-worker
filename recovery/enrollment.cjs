@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {execFile}=require('node:child_process');
 let inFlight=null;
 async function enroll(account,app){
- const dir=__dirname,config=JSON.parse(fs.readFileSync(path.join(dir,'config.json'),'utf8'));
+ const dir=require('../runtime-paths.cjs').dataDir(app.getPath('userData')),config=JSON.parse(fs.readFileSync(path.join(dir,'config.json'),'utf8'));
  const credentialFile=path.join(dir,'secrets','enrollment.json');
  if(fs.existsSync(credentialFile))return;
  const secretDir=path.dirname(credentialFile);fs.mkdirSync(secretDir,{recursive:true});

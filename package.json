@@ -9,7 +9,7 @@
     "start": "electron .",
     "build:release": "node scripts/release.cjs",
     "release": "node scripts/release.cjs --publish",
-    "test": "node --test updater.test.cjs"
+    "test": "node --test *.test.cjs"
   },
   "dependencies": {
     "builder-util-runtime": "9.7.0",
@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "electron": "44.4.0",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "js-yaml": "4.3.2"
   }
 }

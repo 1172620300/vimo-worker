@@ -3,7 +3,7 @@ const path=require('node:path'),os=require('node:os');
 const {execFile}=require('node:child_process');
 const fs=require('node:fs');
 if(!app.requestSingleInstanceLock()){app.quit();process.exit(0)}
-function recovery(){try{const s=JSON.parse(fs.readFileSync(path.join(__dirname,'recovery','status.json'),'utf8'));return {...s,fresh:Date.now()-Date.parse(s.updatedAt)<20000}}catch{return {fresh:false,components:{},agent:{state:'Not configured'}}}}
+function recovery(){try{const s=JSON.parse(fs.readFileSync(path.join(require('./runtime-paths.cjs').dataDir(app.getPath('userData')),'status.json'),'utf8'));return {...s,fresh:Date.now()-Date.parse(s.updatedAt)<20000}}catch{return {fresh:false,components:{},agent:{state:'Not configured'}}}}
 let previous;
 const command=(file,args)=>new Promise(resolve=>execFile(file,args,{windowsHide:true,timeout:6000},(e,s)=>resolve(e?null:s.trim())));
 async function json(url){try{const r=await fetch(url,{signal:AbortSignal.timeout(4000)});if(!r.ok)return null;return await r.json()}catch{return null}}
@@ -29,4 +29,4 @@ ipcMain.handle('worker:probe',async event=>{
  const result=await probe();result.enrollmentError=enrollmentError;return result;
 });
 function create(){const w=new BrowserWindow({width:1280,height:820,minWidth:980,minHeight:650,backgroundColor:'#f5f7fb',autoHideMenuBar:true,webPreferences:{contextIsolation:true,nodeIntegration:false,preload:path.join(__dirname,'preload.cjs')}});w.loadFile(path.join(__dirname,'index.html'));return w}
-app.whenReady().then(()=>{account=require('./account.cjs').register({app,ipcMain,safeStorage},'worker',mainUrl);const win=create();require('./updater.cjs').register({app,ipcMain,win,mainUrl})});app.on('window-all-closed',()=>app.quit());
+app.whenReady().then(()=>{account=require('./account.cjs').register({app,ipcMain,safeStorage},'worker',mainUrl);const win=create();require('./updater.cjs').register({app,ipcMain,win,mainUrl,onState:state=>require('./worker-version.cjs').writeSnapshot(require('./runtime-paths.cjs').dataDir(app.getPath('userData')),state)})});app.on('window-all-closed',()=>app.quit());
