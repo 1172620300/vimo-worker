@@ -1,0 +1,10 @@
+node_modules/
+dist/
+recovery/secrets/
+recovery/logs/
+recovery/*.json
+recovery/*.lock
+*.bin
+*.pem
+*.log
+.env*
