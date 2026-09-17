@@ -17,6 +17,9 @@ async function verifyDownload(files, version, fetcher = fetch) {
   if (!file) throw Error('Installer missing');
   const url = 'https://github.com/' + source.owner + '/' + source.repo + '/releases/download/v' + version + '/SHA256SUMS.txt';
   const response = await fetcher(url, {signal: AbortSignal.timeout(30000)});
+  // Releases created before Phase 1 do not contain SHA256SUMS.txt. The
+  // electron-updater SHA512 verification remains authoritative for those.
+  if (response.status === 404) return file;
   if (!response.ok) throw Error('Checksum manifest unavailable');
   const text = await response.text();
   if (text.length > 65536) throw Error('Invalid checksum manifest');
